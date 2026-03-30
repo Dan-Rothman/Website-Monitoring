@@ -1,0 +1,10 @@
+# Credentials — copy config.example.json to config.json and fill in your values
+config.json
+
+# Runtime
+monitor.log
+
+# Python
+.venv/
+__pycache__/
+*.pyc
