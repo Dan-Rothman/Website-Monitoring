@@ -3,6 +3,7 @@ config.json
 
 # Runtime
 monitor.log
+monitor.db
 
 # Python
 .venv/
