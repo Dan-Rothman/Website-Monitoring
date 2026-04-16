@@ -1,6 +1,7 @@
 {
     "site_url": "https://example.com",
     "check_interval_minutes": 15,
+    "timeout_seconds": 15,
     "smtp": {
         "host": "smtp.gmail.com",
         "port": 587,

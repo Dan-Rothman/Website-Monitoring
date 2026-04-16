@@ -44,6 +44,7 @@ Edit `config.json`:
 |---|---|
 | `site_url` | The URL to monitor |
 | `check_interval_minutes` | How often to check (in minutes) |
+| `timeout_seconds` | Seconds to wait for a response before considering the request timed out (default: 15) |
 | `smtp.host` | SMTP server (e.g. `smtp.gmail.com`) |
 | `smtp.port` | SMTP port (587 for TLS) |
 | `smtp.sender_email` | Email address used to send alerts |

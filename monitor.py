@@ -76,6 +76,15 @@ def send_recovery_alert(config, url):
     send_email(config, subject, body)
     log.info("Recovery alert sent for %s", url)
 
+# --- Network ---
+
+def has_internet_connectivity(timeout_seconds):
+    try:
+        requests.get("https://www.google.com", timeout=timeout_seconds)
+        return True
+    except Exception:
+        return False
+
 # --- Check ---
 
 def check_site():
@@ -83,8 +92,10 @@ def check_site():
     config = load_config()
     url = config["site_url"]
 
+    timeout_seconds = config.get("timeout_seconds", 15)
+
     try:
-        response = requests.get(url, timeout=15)
+        response = requests.get(url, timeout=timeout_seconds)
         if response.status_code < 400:
             log.info("UP — %s (%d)", url, response.status_code)
             if site_was_down:
@@ -114,8 +125,11 @@ def check_site():
                 log.error("Failed to send down alert: %s", e)
 
     except requests.exceptions.Timeout:
-        reason = "Request timed out (>15s)"
+        reason = f"Request timed out (>{timeout_seconds}s)"
         log.warning("DOWN — %s (%s)", url, reason)
+        if not has_internet_connectivity(timeout_seconds):
+            log.warning("Google.com also unreachable — likely a local network issue; skipping alert")
+            return
         if not site_was_down:
             site_was_down = True
             try:
