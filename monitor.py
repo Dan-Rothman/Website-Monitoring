@@ -171,6 +171,10 @@ def check_site(url):
     except requests.exceptions.ConnectionError:
         reason = "Connection refused or DNS failure"
         log.warning("DOWN — %s (%s)", url, reason)
+        if not has_internet_connectivity(timeout_seconds):
+            log.warning("Google.com also unreachable — likely a local network issue; skipping alert")
+            log_response_row(timestamp=timestamp, url=url, reason="Internet Out")
+            return
         log_response_row(timestamp=timestamp, url=url, reason=reason)
         if not site_was_down.get(url):
             site_was_down[url] = True
