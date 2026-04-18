@@ -74,7 +74,7 @@ Edit `config.json`:
 
 | Field | Description |
 |---|---|
-| `site_url` | The URL to monitor |
+| `site_urls` | List of URLs to monitor (one or more) |
 | `check_interval_minutes` | How often to check (in minutes) |
 | `timeout_seconds` | Seconds to wait for a response before considering the request timed out (default: 15) |
 | `smtp.host` | SMTP server (e.g. `smtp.gmail.com`) |

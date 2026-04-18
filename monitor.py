@@ -74,7 +74,7 @@ def log_response_row(
 
 # --- State ---
 
-site_was_down = False
+site_was_down = {}  # keyed by URL
 
 # --- Email ---
 
@@ -128,10 +128,9 @@ def has_internet_connectivity(timeout_seconds):
 
 # --- Check ---
 
-def check_site():
+def check_site(url):
     global site_was_down
     config = load_config()
-    url = config["site_url"]
     timeout_seconds = config.get("timeout_seconds", 15)
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -153,8 +152,8 @@ def check_site():
 
         if response.status_code < 400:
             log.info("UP — %s (%d)", url, response.status_code)
-            if site_was_down:
-                site_was_down = False
+            if site_was_down.get(url):
+                site_was_down[url] = False
                 try:
                     send_recovery_alert(config, url)
                 except Exception as e:
@@ -162,8 +161,8 @@ def check_site():
         else:
             reason = f"HTTP {response.status_code}"
             log.warning("DOWN — %s (%s)", url, reason)
-            if not site_was_down:
-                site_was_down = True
+            if not site_was_down.get(url):
+                site_was_down[url] = True
                 try:
                     send_down_alert(config, url, reason)
                 except Exception as e:
@@ -173,8 +172,8 @@ def check_site():
         reason = "Connection refused or DNS failure"
         log.warning("DOWN — %s (%s)", url, reason)
         log_response_row(timestamp=timestamp, url=url, reason=reason)
-        if not site_was_down:
-            site_was_down = True
+        if not site_was_down.get(url):
+            site_was_down[url] = True
             try:
                 send_down_alert(config, url, reason)
             except Exception as e:
@@ -187,8 +186,8 @@ def check_site():
             log_response_row(timestamp=timestamp, url=url, elapsed_seconds=timeout_seconds, reason="Internet Out")
             return
         log_response_row(timestamp=timestamp, url=url, elapsed_seconds=timeout_seconds, reason="Timeout")
-        if not site_was_down:
-            site_was_down = True
+        if not site_was_down.get(url):
+            site_was_down[url] = True
             try:
                 send_down_alert(config, url, f"Request timed out (>{timeout_seconds}s)")
             except Exception as e:
@@ -203,13 +202,15 @@ if __name__ == "__main__":
     init_db()
     config = load_config()
     interval = config.get("check_interval_minutes", 15)
-    url = config["site_url"]
+    urls = config["site_urls"]
 
-    log.info("Starting monitor for %s — checking every %d minutes", url, interval)
+    log.info("Starting monitor for %d site(s) — checking every %d minutes", len(urls), interval)
+    for url in urls:
+        log.info("  • %s", url)
 
-    check_site()
-
-    schedule.every(interval).minutes.do(check_site)
+    for url in urls:
+        check_site(url)
+        schedule.every(interval).minutes.do(check_site, url)
 
     while True:
         schedule.run_pending()

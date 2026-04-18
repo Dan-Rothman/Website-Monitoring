@@ -1,5 +1,8 @@
 {
-    "site_url": "https://example.com",
+    "site_urls": [
+        "https://example.com",
+        "https://another-site.com"
+    ],
     "check_interval_minutes": 15,
     "timeout_seconds": 15,
     "smtp": {
