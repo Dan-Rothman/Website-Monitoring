@@ -1,7 +1,13 @@
 {
-    "site_urls": [
-        "https://example.com",
-        "https://another-site.com"
+    "sites": [
+        {
+            "name": "Ex1",
+            "url": "https://example.com"
+        },
+        {
+            "name": "Ex2",
+            "url": "https://another-site.com"
+        }
     ],
     "check_interval_minutes": 15,
     "timeout_seconds": 15,
