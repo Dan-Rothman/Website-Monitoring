@@ -92,11 +92,12 @@ def send_email(config, subject, body):
         server.login(smtp["sender_email"], smtp["app_password"])
         server.sendmail(smtp["sender_email"], config["alert_recipients"], msg.as_string())
 
-def send_down_alert(config, url, reason):
-    subject = f"[DOWN] {url}"
+def send_down_alert(config, site, reason):
+    url = site["url"]
+    name = site["name"]
+    subject = f"[DOWN] {name}-{reason}"
     body = (
         f"Website monitoring alert\n"
-        f"{'=' * 40}\n"
         f"Status : DOWN\n"
         f"URL    : {url}\n"
         f"Reason : {reason}\n"
@@ -105,11 +106,12 @@ def send_down_alert(config, url, reason):
     send_email(config, subject, body)
     log.info("Down alert sent for %s", url)
 
-def send_recovery_alert(config, url):
-    subject = f"[RECOVERED] {url}"
+def send_recovery_alert(config, site):
+    url = site["url"]
+    name = site["name"]
+    subject = f"[RECOVERED] {name}"
     body = (
         f"Website monitoring alert\n"
-        f"{'=' * 40}\n"
         f"Status : RECOVERED\n"
         f"URL    : {url}\n"
         f"Time   : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
@@ -128,7 +130,8 @@ def has_internet_connectivity(timeout_seconds):
 
 # --- Check ---
 
-def check_site(url):
+def check_site(site):
+    url = site["url"]
     global site_was_down
     config = load_config()
     timeout_seconds = config.get("timeout_seconds", 15)
@@ -155,7 +158,7 @@ def check_site(url):
             if site_was_down.get(url):
                 site_was_down[url] = False
                 try:
-                    send_recovery_alert(config, url)
+                    send_recovery_alert(config, site)
                 except Exception as e:
                     log.error("Failed to send recovery alert: %s", e)
         else:
@@ -164,7 +167,7 @@ def check_site(url):
             if not site_was_down.get(url):
                 site_was_down[url] = True
                 try:
-                    send_down_alert(config, url, reason)
+                    send_down_alert(config, site, reason)
                 except Exception as e:
                     log.error("Failed to send down alert: %s", e)
 
@@ -179,7 +182,7 @@ def check_site(url):
         if not site_was_down.get(url):
             site_was_down[url] = True
             try:
-                send_down_alert(config, url, reason)
+                send_down_alert(config, site, reason)
             except Exception as e:
                 log.error("Failed to send down alert: %s", e)
 
@@ -193,7 +196,7 @@ def check_site(url):
         if not site_was_down.get(url):
             site_was_down[url] = True
             try:
-                send_down_alert(config, url, f"Request timed out (>{timeout_seconds}s)")
+                send_down_alert(config, site, f"Request timed out (>{timeout_seconds}s)")
             except Exception as e:
                 log.error("Failed to send down alert: %s", e)
 
@@ -206,15 +209,15 @@ if __name__ == "__main__":
     init_db()
     config = load_config()
     interval = config.get("check_interval_minutes", 15)
-    urls = config["site_urls"]
+    sites = config["sites"]
 
-    log.info("Starting monitor for %d site(s) — checking every %d minutes", len(urls), interval)
-    for url in urls:
-        log.info("  • %s", url)
+    log.info("Starting monitor for %d site(s) — checking every %d minutes", len(sites), interval)
+    for site in sites:
+        log.info("  • %s", site)
 
-    for url in urls:
-        check_site(url)
-        schedule.every(interval).minutes.do(check_site, url)
+    for site in sites:
+        check_site(site)
+        schedule.every(interval).minutes.do(check_site, site)
 
     while True:
         schedule.run_pending()
