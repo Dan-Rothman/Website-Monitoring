@@ -75,8 +75,8 @@ Edit `config.json`:
 | Field | Description |
 |---|---|
 | `sites` | List of sites to monitor (one or more) |
-| 'sites.name' | Name of site used in alert emails |
-| 'sites.url' | The URL of the site |
+| `sites.name` | Name of site used in alert emails |
+| `sites.url` | The URL of the site |
 | `check_interval_minutes` | How often to check (in minutes) |
 | `timeout_seconds` | Seconds to wait for a response before considering the request timed out (default: 15) |
 | `smtp.host` | SMTP server (e.g. `smtp.gmail.com`) |
